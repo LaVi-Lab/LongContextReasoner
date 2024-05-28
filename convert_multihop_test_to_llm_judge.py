@@ -3,6 +3,7 @@
 Usage:
 python scripts/multihop/convert_multihop_test_to_llm_judge.py --raw-data data/musique/processed_test_ircot_subsampled_500.jsonl --bench-name musique --template data/prompts/coc.json
 """
+
 import argparse
 import json
 import os

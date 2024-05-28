@@ -1,6 +1,6 @@
 # Making Long-Context Language Models Better Multi-Hop Reasoners
 
-Official repo of "Making Long-Context Language Models Better Multi-Hop Reasoners" (ACL 2024)
+This repository contains the code and data for "Making Long-Context Language Models Better Multi-Hop Reasoners" (ACL 2024). In this paper, we introduce *Reasoning with Attributions*, a prompting technique to improve the multi-hop reasoning of long-context language models. This work also collects attribution annotations for [MuSiQue](https://github.com/stonybrooknlp/musique), a popular multi-hop reasoning dataset, to facilitate the future research.
 
 ## MuSiQue-Attribute Dataset
 
@@ -45,7 +45,7 @@ The dataset is available at [`assets/MuSiQue-Attribute.zip`](assets/MuSiQue-Attr
 
 ## Reproduction
 
-Our code is based on [FastChat](https://github.com/lm-sys/FastChat).
+To reproduce our LoRA fine-tuned model results, we provide the following commands to train & test the model. Our code is based on [FastChat](https://github.com/lm-sys/FastChat).
 
 ### Installation
 
@@ -55,7 +55,7 @@ cd FastChat
 git checkout 722ab0299fd10221fa4686267fe068a688bacd4c
 pip install --upgrade pip  # enable PEP 660 support
 pip install -e ".[model_worker,llm_judge]"
-pip install pytablewriter rouge_score nltk
+pip install pytablewriter rouge_score nltk rapidfuzz jsonnet
 cd ..
 ```
 
@@ -72,6 +72,7 @@ First, you should obtain all raw data for fine-tuning and evaluation:
     ```sh
     git clone https://github.com/StonyBrookNLP/ircot.git
     ./ircot/download/processed_data.sh
+    ./ircot/download/raw_data.sh
     ```
 
 Then, run the following command to convert Alpaca-52K to FastChat format.
@@ -89,9 +90,10 @@ python attach_multihop_train.py --original-data data/alpaca-7200-musique-ao-2-co
 
 For the evaluation data, run the following command to convert the subsampled, preprocessed MuSiQue test set data to LLM Judge format.
 ```sh
-python convert_multihop_test_to_llm_judge.py --raw-data processed_data/musique/test_subsampled.jsonl --bench-name musique-coc --template prompts/coc.json
-python convert_multihop_test_to_llm_judge.py --raw-data processed_data/musique/test_subsampled.jsonl --bench-name musique-cot --template prompts/cot.json
-python convert_multihop_test_to_llm_judge.py --raw-data processed_data/musique/test_subsampled.jsonl --bench-name musique-ao --template prompts/ao.json
+python convert_data_format.py --raw-datadir raw_data/musique --annotation-dir ircot/prompt_generator/data_annotations --subsampled-path processed_data/musique/test_subsampled.jsonl --output-dir data/musique
+python convert_multihop_test_to_llm_judge.py --raw-data data/musique/processed_test_subsampled.jsonl --bench-name musique-coc --template prompts/coc.json
+python convert_multihop_test_to_llm_judge.py --raw-data data/musique/processed_test_subsampled.jsonl --bench-name musique-cot --template prompts/cot.json
+python convert_multihop_test_to_llm_judge.py --raw-data data/musique/processed_test_subsampled.jsonl --bench-name musique-ao --template prompts/ao.json
 ```
 Test data will be stored into `fastchat/llm_judge/data/{bench-name}`.
 
@@ -103,7 +105,10 @@ You can use the following command to replicate our fine-tuned model on 8 NVIDIA 
 bash scripts/train.sh data/alpaca-7200-musique-ao-2-cot-2-coc-2-qia-1.json <MODEL_NAME>
 ```
 
-We also release the model weight of AttrLoRA in [`assets/AttrLoRA.zip`](assets/AttrLoRA.zip)
+We also release the model weight of AttrLoRA in [`assets/AttrLoRA.zip`](assets/AttrLoRA.zip):
+```sh
+unzip assets/AttrLoRA.zip -d output 
+```
 
 ### Evaluation
 
@@ -111,4 +116,19 @@ To evaluate the model on MuSiQue, run the command:
 
 ```sh
 bash eval.sh <MODEL_NAME>
+```
+
+If you want to use our released model for inference, please use `AttrLoRA` as the model name in the script after unzipping our model weight archive.
+
+## Citation
+
+Please cite our paper if you use our data, code or model in your work:
+
+```bibtex
+@inproceedings{li2024making,
+   title={Making Long-Context Language Models Better Multi-Hop Reasoners},
+   author={Li, Yanyang and Liang, Shuo and Lyu, Michael and Wang, Liwei},
+   year={2024},
+   booktitle={Annual Meeting of the Association for Computational Linguistics (ACL)},
+}
 ```

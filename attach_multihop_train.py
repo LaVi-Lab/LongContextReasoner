@@ -3,6 +3,7 @@
 Usage:
 python attach_multihop_train.py --original-data data/alpaca_data_fschat.json --multihop-data MuSiQue-Attribute/train.jsonl --attached-data data/alpaca_musique_coc.json --template data/prompts/coc.json
 """
+
 import argparse
 import json
 import random

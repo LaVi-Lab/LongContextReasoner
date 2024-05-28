@@ -83,9 +83,11 @@ def from_sample_to_instance(
             cot.append(
                 Thought(
                     rationale=step["cot_sent"],
-                    identifier=related_evidences[0].identifier
-                    if len(related_evidences) > 0
-                    else None,
+                    identifier=(
+                        related_evidences[0].identifier
+                        if len(related_evidences) > 0
+                        else None
+                    ),
                     quotation=step["paragraphs"][0]["text_substring"],
                 )
             )

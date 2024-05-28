@@ -3,6 +3,7 @@
 Usage:
 python gen_multihop_judgment.py --model-list [LIST-OF-MODEL-ID] --parallel [num-concurrent-api-call]
 """
+
 import argparse
 import string
 import re
