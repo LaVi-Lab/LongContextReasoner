@@ -147,16 +147,6 @@ if __name__ == "__main__":
         "--first-n", type=int, help="A debug option. Only run the first `n` judgments."
     )
     parser.add_argument(
-        "--save_output",
-        action="store_true",
-        help="save output",
-    )
-    parser.add_argument(
-        "--no_eval",
-        action="store_true",
-        help="do no evaluation",
-    )
-    parser.add_argument(
         "--subtype_evaluation",
         action="store_true",
         help="evaluation on subtype",
@@ -195,74 +185,53 @@ if __name__ == "__main__":
     model_results = {}
     subtype_model_results = defaultdict(lambda: {})
     for model in sorted(models):
-        kept_data = []
-
         overall_result = defaultdict(lambda: 0)
         subtype_result = defaultdict(lambda: {})
         for qid, pred in model_answers[model].items():
             assert qid == pred["question_id"]
             current_q = questions[question_idmap[qid]]
-            if not args.no_eval:
-                single_result = evaluate_single(
-                    references[qid], pred["choices"][0]["turns"][0]
-                )
-                for k, v in single_result.items():
-                    overall_result[k] += single_result[k]
-                    if args.subtype_evaluation:
-                        subtype_result[current_q["qtype"]][k] = (
-                            subtype_result[current_q["qtype"]].get(k, 0)
-                            + single_result[k]
-                        )
-                overall_result["count"] += 1
+            single_result = evaluate_single(
+                references[qid], pred["choices"][0]["turns"][0]
+            )
+            for k, v in single_result.items():
+                overall_result[k] += single_result[k]
                 if args.subtype_evaluation:
-                    subtype_result[current_q["qtype"]]["count"] = (
-                        subtype_result[current_q["qtype"]].get("count", 0) + 1
+                    subtype_result[current_q["qtype"]][k] = (
+                        subtype_result[current_q["qtype"]].get(k, 0)
+                        + single_result[k]
                     )
-
-            if args.save_output:
-                # save
-                kept_data.append(
-                    dict(
-                        instruction=current_q["instruction"],
-                        output=pred["choices"][0]["turns"][0],
-                        generator=pred["model_id"],
-                        dataset="dataset",
-                        reference=current_q["reference"],
-                        reference_generator=current_q["reference_generator"],
-                    )
-                )
-        if args.save_output:
-            with open(os.path.join(output_dir, f"{model}.json"), "w") as f:
-                json.dump(kept_data, f)
-
-        if not args.no_eval:
-            normalized_overall_result = {}
-            for k, v in overall_result.items():
-                if k not in ["count"]:
-                    normalized_overall_result[k] = v / overall_result["count"]
-
-            model_results[model] = normalized_overall_result
-
-            # subtype
+            overall_result["count"] += 1
             if args.subtype_evaluation:
-                normalized_subtype_result = defaultdict(lambda: {})
+                subtype_result[current_q["qtype"]]["count"] = (
+                    subtype_result[current_q["qtype"]].get("count", 0) + 1
+                )
 
-                for subtype, subresult in subtype_result.items():
-                    # k is different subtype
-                    for k, v in subresult.items():
-                        if k not in ["count"]:
-                            normalized_subtype_result[subtype][k] = (
-                                v / subresult["count"]
-                            )
+        normalized_overall_result = {}
+        for k, v in overall_result.items():
+            if k not in ["count"]:
+                normalized_overall_result[k] = v / overall_result["count"]
 
-                    subtype_model_results[subtype][model] = normalized_subtype_result[
-                        subtype
-                    ]
+        model_results[model] = normalized_overall_result
 
-    if not args.no_eval:
-        # Show results
-        make_table(model_results)
+        # subtype
         if args.subtype_evaluation:
-            for subtype in sorted(list(subtype_model_results.keys())):
-                result = subtype_model_results[subtype]
-                make_table(result, title=f"subtype: {subtype}")
+            normalized_subtype_result = defaultdict(lambda: {})
+
+            for subtype, subresult in subtype_result.items():
+                # k is different subtype
+                for k, v in subresult.items():
+                    if k not in ["count"]:
+                        normalized_subtype_result[subtype][k] = (
+                            v / subresult["count"]
+                        )
+
+                subtype_model_results[subtype][model] = normalized_subtype_result[
+                    subtype
+                ]
+
+    # Show results
+    make_table(model_results)
+    if args.subtype_evaluation:
+        for subtype in sorted(list(subtype_model_results.keys())):
+            result = subtype_model_results[subtype]
+            make_table(result, title=f"subtype: {subtype}")
