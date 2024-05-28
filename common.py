@@ -27,6 +27,7 @@ class Instance:
     question: str
     answers: List[str]
     evidences: List[Evidence]
+    qtype: Optional[str] = None
     cot: Optional[List[Thought]] = None  # [Thought_1, ..., Thought_n]
 
 
@@ -96,6 +97,7 @@ def from_sample_to_instance(
 
     input_instance = Instance(
         qid=sample["id"],
+        qtype=sample.get("qtype"),
         question=sample["question"],
         answers=sample["answer"],
         evidences=evidences,

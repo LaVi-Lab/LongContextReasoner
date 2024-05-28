@@ -16,7 +16,7 @@ from typing import List, Dict
 from pytablewriter import MarkdownTableWriter
 from rouge_score import rouge_scorer
 from nltk.metrics.scores import f_measure
-
+import fastchat
 from fastchat.llm_judge.common import (
     load_questions,
     load_model_answers,
@@ -153,11 +153,20 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    question_file = f"data/{args.bench_name}/question.jsonl"
-    answer_dir = f"data/{args.bench_name}/model_answer"
-    output_dir = f"data/{args.bench_name}/alpaca_answer"
-
-    os.makedirs(output_dir, exist_ok=True)
+    question_file = os.path.join(
+        os.path.dirname(fastchat.__file__),
+        "llm_judge",
+        "data",
+        args.bench_name,
+        "question.jsonl",
+    )
+    answer_dir = os.path.join(
+        os.path.dirname(fastchat.__file__),
+        "llm_judge",
+        "data",
+        args.bench_name,
+        "model_answer",
+    )
 
     # Load questions
     questions = load_questions(question_file, None, None)
@@ -197,8 +206,7 @@ if __name__ == "__main__":
                 overall_result[k] += single_result[k]
                 if args.subtype_evaluation:
                     subtype_result[current_q["qtype"]][k] = (
-                        subtype_result[current_q["qtype"]].get(k, 0)
-                        + single_result[k]
+                        subtype_result[current_q["qtype"]].get(k, 0) + single_result[k]
                     )
             overall_result["count"] += 1
             if args.subtype_evaluation:
@@ -221,9 +229,7 @@ if __name__ == "__main__":
                 # k is different subtype
                 for k, v in subresult.items():
                     if k not in ["count"]:
-                        normalized_subtype_result[subtype][k] = (
-                            v / subresult["count"]
-                        )
+                        normalized_subtype_result[subtype][k] = v / subresult["count"]
 
                 subtype_model_results[subtype][model] = normalized_subtype_result[
                     subtype

@@ -57,6 +57,7 @@ if __name__ == "__main__":
         fschat_data.append(
             {
                 "question_id": idx,
+                "qtype": instance.qtype,
                 "category": "reasoning",
                 "turns": [prompt],
                 "reference": [instance.answers[0]],

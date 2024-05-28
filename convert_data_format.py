@@ -87,7 +87,7 @@ def convert_2wikimultihopqa_raw_data(input_filename: str, output_filepath: str):
 
         processed_instance = {
             "id": raw_instance["_id"],
-            "type": raw_instance["type"],
+            "qtype": raw_instance["type"],
             "paragraphs": processed_contexts,
             "question": raw_instance["question"],
             "answer": [raw_instance["answer"]],
@@ -155,7 +155,7 @@ def convert_hotpotqa_raw_data(input_filename: str, output_filepath: str):
 
         processed_instance = {
             "id": raw_instance["_id"],
-            "type": raw_instance["type"],
+            "qtype": raw_instance["type"],
             "paragraphs": processed_contexts,
             "question": raw_instance["question"],
             "answer": [raw_instance["answer"]],
@@ -177,7 +177,7 @@ def convert_musique_raw_data(input_filename: str, output_filepath: str):
     for raw_instance in raw_instances:
         processed_instance = {
             "id": raw_instance["id"],
-            "type": raw_instance["id"][:4],  # 2hop,3hop,4hop
+            "qtype": raw_instance["id"][:4],  # 2hop,3hop,4hop
             "paragraphs": [
                 {
                     "idx": index,
