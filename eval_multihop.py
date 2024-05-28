@@ -1,7 +1,7 @@
 """Generate judgements for multihop reasoning with conventional metrics like Exact Match.
 
 Usage:
-python gen_multihop_judgment.py --model-list [LIST-OF-MODEL-ID] --parallel [num-concurrent-api-call]
+python eval_multihop.py --model-list [LIST-OF-MODEL-ID]
 """
 
 import argparse
@@ -113,7 +113,7 @@ def evaluate_single(refs: List[str], pred: str) -> Dict[str, float]:
     return results
 
 
-def make_table(result: Dict[str, Dict[str, float]]):
+def make_table(result: Dict[str, Dict[str, float]], title="Overall_results"):
     writer = MarkdownTableWriter()
     metric_names = list(result[list(result.keys())[0]].keys())
     writer.headers = ["Model"] + metric_names
@@ -124,6 +124,7 @@ def make_table(result: Dict[str, Dict[str, float]]):
             row.append("{:.4f}".format(v[metric_name]))
         values.append(row)
     writer.value_matrix = values
+    print(title + "\n")
     print(writer.dumps())
 
 
@@ -154,6 +155,11 @@ if __name__ == "__main__":
         "--no_eval",
         action="store_true",
         help="do no evaluation",
+    )
+    parser.add_argument(
+        "--subtype_evaluation",
+        action="store_true",
+        help="evaluation on subtype",
     )
     args = parser.parse_args()
 
@@ -187,25 +193,34 @@ if __name__ == "__main__":
 
     # Evaluate all answers
     model_results = {}
+    subtype_model_results = defaultdict(lambda: {})
     for model in sorted(models):
         kept_data = []
 
         overall_result = defaultdict(lambda: 0)
+        subtype_result = defaultdict(lambda: {})
         for qid, pred in model_answers[model].items():
             assert qid == pred["question_id"]
-
+            current_q = questions[question_idmap[qid]]
             if not args.no_eval:
                 single_result = evaluate_single(
                     references[qid], pred["choices"][0]["turns"][0]
                 )
                 for k, v in single_result.items():
                     overall_result[k] += single_result[k]
+                    if args.subtype_evaluation:
+                        subtype_result[current_q["qtype"]][k] = (
+                            subtype_result[current_q["qtype"]].get(k, 0)
+                            + single_result[k]
+                        )
                 overall_result["count"] += 1
+                if args.subtype_evaluation:
+                    subtype_result[current_q["qtype"]]["count"] = (
+                        subtype_result[current_q["qtype"]].get("count", 0) + 1
+                    )
 
             if args.save_output:
-                ## save
-                current_q = questions[question_idmap[qid]]
-
+                # save
                 kept_data.append(
                     dict(
                         instruction=current_q["instruction"],
@@ -228,6 +243,26 @@ if __name__ == "__main__":
 
             model_results[model] = normalized_overall_result
 
+            # subtype
+            if args.subtype_evaluation:
+                normalized_subtype_result = defaultdict(lambda: {})
+
+                for subtype, subresult in subtype_result.items():
+                    # k is different subtype
+                    for k, v in subresult.items():
+                        if k not in ["count"]:
+                            normalized_subtype_result[subtype][k] = (
+                                v / subresult["count"]
+                            )
+
+                    subtype_model_results[subtype][model] = normalized_subtype_result[
+                        subtype
+                    ]
+
     if not args.no_eval:
         # Show results
         make_table(model_results)
+        if args.subtype_evaluation:
+            for subtype in sorted(list(subtype_model_results.keys())):
+                result = subtype_model_results[subtype]
+                make_table(result, title=f"subtype: {subtype}")
