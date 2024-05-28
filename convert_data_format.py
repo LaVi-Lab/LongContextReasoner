@@ -71,10 +71,6 @@ def convert_2wikimultihopqa_raw_data(input_filename: str, output_filepath: str):
                     "is_supporting": is_supporting,
                 }
             )
-        title_to_idx = {p["title"]: idx for idx, p in enumerate(processed_contexts)}
-        gold_title_idxs = [
-            title_to_idx[title] for title, text in raw_instance["supporting_facts"]
-        ]
 
         # context
         context = {}
@@ -91,6 +87,7 @@ def convert_2wikimultihopqa_raw_data(input_filename: str, output_filepath: str):
 
         processed_instance = {
             "id": raw_instance["_id"],
+            "type": raw_instance["type"],
             "paragraphs": processed_contexts,
             "question": raw_instance["question"],
             "answer": [raw_instance["answer"]],
@@ -128,8 +125,6 @@ def convert_hotpotqa_raw_data(input_filename: str, output_filepath: str):
 
         paragraph_texts = ["".join(paragraph) for title, paragraph in raw_contexts]
         paragraph_texts = list(set(paragraph_texts))
-        paragraph_to_idx = {p: idx for idx, p in enumerate(paragraph_texts)}
-        gold_paragraph_idxs = [paragraph_to_idx[p] for p in gold_paragraph_texts]
 
         processed_contexts = [
             {
@@ -160,6 +155,7 @@ def convert_hotpotqa_raw_data(input_filename: str, output_filepath: str):
 
         processed_instance = {
             "id": raw_instance["_id"],
+            "type": raw_instance["type"],
             "paragraphs": processed_contexts,
             "question": raw_instance["question"],
             "answer": [raw_instance["answer"]],
@@ -181,6 +177,7 @@ def convert_musique_raw_data(input_filename: str, output_filepath: str):
     for raw_instance in raw_instances:
         processed_instance = {
             "id": raw_instance["id"],
+            "type": raw_instance["id"][:4],  # 2hop,3hop,4hop
             "paragraphs": [
                 {
                     "idx": index,
