@@ -1,0 +1,13 @@
+{
+    "instruction": "Write an accurate and concise answer for the given question using only the provided search results (some of which might be irrelevant) and cite them properly. Start with an accurate, engaging, and concise explanation based only on the provided documents. Must end with \"The answer is:\". Use an unbiased and journalistic tone. Always cite for any factual claim.",
+    "question_prefix": "Question: ",
+    "question_suffix": " Think step-by-step.\n\n",
+    "answer_prefix": "Answer:",
+    "context_prefix": "",
+    "context_suffix": "\n",
+    "evidence_template_str": "Document {identifier}(Title: {title}): {sentence}\n",
+    "question_first": false,
+    "step_template_str": "{rationale} {identifier}. ",
+    "rationale_prefix": "",
+    "rationale_suffix": "The answer is: "
+}

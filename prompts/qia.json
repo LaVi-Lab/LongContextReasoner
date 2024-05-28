@@ -1,0 +1,13 @@
+{
+    "instruction": "Find all quotes from the given documents that are helpful to answering the question.",
+    "question_prefix": "Question: ",
+    "question_suffix": "\n",
+    "answer_prefix": "Quote:",
+    "context_prefix": "",
+    "context_suffix": "\n",
+    "evidence_template_str": "Document {identifier}(Title: {title}): {sentence}\n",
+    "question_first": false,
+    "step_template_str": "- {quotation} {identifier}\n",
+    "rationale_prefix": "",
+    "rationale_suffix": ""
+}
